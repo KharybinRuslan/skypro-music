@@ -57,5 +57,5 @@
 }
 
 .img {
-  height: auto;
+  /* Размеры контролируются через inline style */
 }

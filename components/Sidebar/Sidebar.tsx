@@ -23,6 +23,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
+                loading="eager"
                 style={{ width: '100%', height: 'auto' }}
               />
             </Link>
