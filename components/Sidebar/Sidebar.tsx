@@ -23,6 +23,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
           </div>
@@ -34,6 +35,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
           </div>
@@ -45,6 +47,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
           </div>
