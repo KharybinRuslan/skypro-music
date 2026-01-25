@@ -20,9 +20,9 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist01.png"
                 alt="day's playlist"
-                fill
+                width={250}
+                height={170}
                 loading="eager"
-                style={{ objectFit: 'cover' }}
               />
             </Link>
           </div>
@@ -31,8 +31,8 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist02.png"
                 alt="day's playlist"
-                fill
-                style={{ objectFit: 'cover' }}
+                width={250}
+                height={170}
               />
             </Link>
           </div>
@@ -41,8 +41,8 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist03.png"
                 alt="day's playlist"
-                fill
-                style={{ objectFit: 'cover' }}
+                width={250}
+                height={170}
               />
             </Link>
           </div>
