@@ -18,7 +18,6 @@ export default function Sidebar() {
           <div className={styles.item}>
             <Link className={styles.link} href="#">
               <Image
-                className={styles.img}
                 src="/img/playlist01.png"
                 alt="day's playlist"
                 width={250}
@@ -31,7 +30,6 @@ export default function Sidebar() {
           <div className={styles.item}>
             <Link className={styles.link} href="#">
               <Image
-                className={styles.img}
                 src="/img/playlist02.png"
                 alt="day's playlist"
                 width={250}
@@ -43,7 +41,6 @@ export default function Sidebar() {
           <div className={styles.item}>
             <Link className={styles.link} href="#">
               <Image
-                className={styles.img}
                 src="/img/playlist03.png"
                 alt="day's playlist"
                 width={250}
