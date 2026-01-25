@@ -20,10 +20,9 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist01.png"
                 alt="day's playlist"
-                width={250}
-                height={170}
+                fill
                 loading="eager"
-                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+                style={{ objectFit: 'cover' }}
               />
             </Link>
           </div>
@@ -32,9 +31,8 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist02.png"
                 alt="day's playlist"
-                width={250}
-                height={170}
-                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+                fill
+                style={{ objectFit: 'cover' }}
               />
             </Link>
           </div>
@@ -43,9 +41,8 @@ export default function Sidebar() {
               <Image
                 src="/img/playlist03.png"
                 alt="day's playlist"
-                width={250}
-                height={170}
-                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
+                fill
+                style={{ objectFit: 'cover' }}
               />
             </Link>
           </div>
