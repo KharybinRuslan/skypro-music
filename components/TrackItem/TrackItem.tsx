@@ -1,21 +1,18 @@
 import Link from 'next/link';
 import styles from './TrackItem.module.css';
+import { Track } from '@/types/track';
 
 interface TrackItemProps {
-  name: string;
-  author: string;
-  album: string;
-  duration: string;
-  nameSpan?: string;
+  track: Track;
 }
 
-export default function TrackItem({
-  name,
-  author,
-  album,
-  duration,
-  nameSpan,
-}: TrackItemProps) {
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+export default function TrackItem({ track }: TrackItemProps) {
   return (
     <div className={styles.item}>
       <div className={styles.track}>
@@ -27,26 +24,27 @@ export default function TrackItem({
           </div>
           <div className={styles.titleText}>
             <Link className={styles.titleLink} href="">
-              {name}{' '}
-              {nameSpan && <span className={styles.titleSpan}>{nameSpan}</span>}
+              {track.name}
             </Link>
           </div>
         </div>
         <div className={styles.author}>
           <Link className={styles.authorLink} href="">
-            {author}
+            {track.author}
           </Link>
         </div>
         <div className={styles.album}>
           <Link className={styles.albumLink} href="">
-            {album}
+            {track.album}
           </Link>
         </div>
         <div className={styles.time}>
           <svg className={styles.timeSvg}>
             <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
           </svg>
-          <span className={styles.timeText}>{duration}</span>
+          <span className={styles.timeText}>
+            {formatDuration(track.duration_in_seconds)}
+          </span>
         </div>
       </div>
     </div>

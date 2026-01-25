@@ -1,7 +1,11 @@
 import styles from './Playlist.module.css';
 import TrackItem from '../TrackItem/TrackItem';
+import { data } from '@/data';
+import { Track } from '@/types/track';
 
 export default function Playlist() {
+  const tracks: Track[] = data;
+
   return (
     <div className={styles.content}>
       <div className={styles.title}>
@@ -15,38 +19,9 @@ export default function Playlist() {
         </div>
       </div>
       <div className={styles.playlist}>
-        <TrackItem
-          name="Guilt"
-          author="Nero"
-          album="Welcome Reality"
-          duration="4:44"
-        />
-        <TrackItem
-          name="Elektro"
-          author="Dynoro, Outwork, Mr. Gee"
-          album="Elektro"
-          duration="2:22"
-        />
-        <TrackItem
-          name="I'm Fire"
-          author="Ali Bakgor"
-          album="I'm Fire"
-          duration="2:22"
-        />
-        <TrackItem
-          name="Non Stop"
-          author="Стоункат, Psychopath"
-          album="Non Stop"
-          duration="4:12"
-          nameSpan="(Remix)"
-        />
-        <TrackItem
-          name="Run Run"
-          author="Jaded, Will Clarke, AR/CO"
-          album="Run Run"
-          duration="2:54"
-          nameSpan="(feat. AR/CO)"
-        />
+        {tracks.map((track) => (
+          <TrackItem key={track._id} track={track} />
+        ))}
       </div>
     </div>
   );

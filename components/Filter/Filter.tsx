@@ -1,12 +1,124 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import classNames from 'classnames';
 import styles from './Filter.module.css';
+import { data } from '@/data';
+import { Track } from '@/types/track';
+
+type FilterType = 'author' | 'year' | 'genre' | null;
 
 export default function Filter() {
+  const [activeFilter, setActiveFilter] = useState<FilterType>(null);
+  const tracks: Track[] = data;
+
+  const uniqueAuthors = useMemo(() => {
+    const authors = tracks
+      .map((track) => track.author)
+      .filter((author) => author && author !== '-');
+    return Array.from(new Set(authors)).sort();
+  }, [tracks]);
+
+  const uniqueYears = useMemo(() => {
+    const years = tracks
+      .map((track) => {
+        const year = new Date(track.release_date).getFullYear();
+        return year.toString();
+      })
+      .filter((year) => year && year !== 'NaN');
+    return Array.from(new Set(years)).sort((a, b) => Number(b) - Number(a));
+  }, [tracks]);
+
+  const uniqueGenres = useMemo(() => {
+    const genres = tracks.flatMap((track) => track.genre);
+    return Array.from(new Set(genres)).sort();
+  }, [tracks]);
+
+  const handleFilterClick = (filterType: FilterType) => {
+    if (activeFilter === filterType) {
+      setActiveFilter(null);
+    } else {
+      setActiveFilter(filterType);
+    }
+  };
+
+  const getFilterList = (): string[] => {
+    switch (activeFilter) {
+      case 'author':
+        return uniqueAuthors;
+      case 'year':
+        return uniqueYears;
+      case 'genre':
+        return uniqueGenres;
+      default:
+        return [];
+    }
+  };
+
+  const filterList = getFilterList();
+
   return (
     <div className={styles.filter}>
       <div className={styles.filterTitle}>Искать по:</div>
-      <div className={styles.filterButton}>исполнителю</div>
-      <div className={styles.filterButton}>году выпуска</div>
-      <div className={styles.filterButton}>жанру</div>
+      <div className={styles.filterButtons}>
+        <div className={styles.filterButtonWrapper}>
+          <button
+            className={classNames(styles.filterButton, {
+              [styles.active]: activeFilter === 'author',
+            })}
+            onClick={() => handleFilterClick('author')}
+          >
+            исполнителю
+          </button>
+          {activeFilter === 'author' && filterList.length > 0 && (
+            <div className={styles.filterList}>
+              {filterList.map((item, index) => (
+                <div key={index} className={styles.filterListItem}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className={styles.filterButtonWrapper}>
+          <button
+            className={classNames(styles.filterButton, {
+              [styles.active]: activeFilter === 'year',
+            })}
+            onClick={() => handleFilterClick('year')}
+          >
+            году выпуска
+          </button>
+          {activeFilter === 'year' && filterList.length > 0 && (
+            <div className={styles.filterList}>
+              {filterList.map((item, index) => (
+                <div key={index} className={styles.filterListItem}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className={styles.filterButtonWrapper}>
+          <button
+            className={classNames(styles.filterButton, {
+              [styles.active]: activeFilter === 'genre',
+            })}
+            onClick={() => handleFilterClick('genre')}
+          >
+            жанру
+          </button>
+          {activeFilter === 'genre' && filterList.length > 0 && (
+            <div className={styles.filterList}>
+              {filterList.map((item, index) => (
+                <div key={index} className={styles.filterListItem}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
