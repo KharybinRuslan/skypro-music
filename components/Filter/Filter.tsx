@@ -19,15 +19,7 @@ export default function Filter() {
     return Array.from(new Set(authors)).sort();
   }, [tracks]);
 
-  const uniqueYears = useMemo(() => {
-    const years = tracks
-      .map((track) => {
-        const year = new Date(track.release_date).getFullYear();
-        return year.toString();
-      })
-      .filter((year) => year && year !== 'NaN');
-    return Array.from(new Set(years)).sort((a, b) => Number(b) - Number(a));
-  }, [tracks]);
+  const yearOptions = ['Сначала новые', 'Сначала старые', 'По умолчанию'];
 
   const uniqueGenres = useMemo(() => {
     const genres = tracks.flatMap((track) => track.genre);
@@ -47,7 +39,7 @@ export default function Filter() {
       case 'author':
         return uniqueAuthors;
       case 'year':
-        return uniqueYears;
+        return yearOptions;
       case 'genre':
         return uniqueGenres;
       default:
