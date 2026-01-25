@@ -57,7 +57,7 @@
   left: 0;
   background-color: #313131;
   border-radius: 12px;
-  padding: 34px;
+  padding: 34px 24px 34px 34px;
   z-index: 10;
   color: white;
   display: flex;
@@ -65,9 +65,11 @@
   height: max-content;
   max-height: 237px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-direction: column;
   width: max-content;
   max-width: 248px;
+  box-sizing: border-box;
 }
 
 .filterList::-webkit-scrollbar {
@@ -76,10 +78,13 @@
 
 .filterList::-webkit-scrollbar-track {
   background-color: rgba(75, 73, 73, 1);
+  border-radius: 0 12px 12px 0;
+  margin: 12px 0;
 }
 
 .filterList::-webkit-scrollbar-thumb {
   background-color: white;
+  border-radius: 2px;
 }
 
 .filterListItem {
