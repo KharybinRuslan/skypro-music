@@ -23,7 +23,7 @@ export default function Sidebar() {
                 width={250}
                 height={170}
                 loading="eager"
-                style={{ width: '100%', height: 'auto' }}
+                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
               />
             </Link>
           </div>
@@ -34,7 +34,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
-                style={{ width: '100%', height: 'auto' }}
+                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
               />
             </Link>
           </div>
@@ -45,7 +45,7 @@ export default function Sidebar() {
                 alt="day's playlist"
                 width={250}
                 height={170}
-                style={{ width: '100%', height: 'auto' }}
+                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
               />
             </Link>
           </div>
