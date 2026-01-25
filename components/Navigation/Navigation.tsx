@@ -12,7 +12,6 @@ export default function Navigation() {
           width={113}
           height={17}
           className={styles.logoImage}
-          style={{ width: 'auto', height: 'auto' }}
         />
       </div>
       <div className={styles.burger}>
