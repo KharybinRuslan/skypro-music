@@ -34,8 +34,7 @@
 }
 
 .menu {
-  display: block;
-  visibility: visible;
+  display: none;
 }
 
 .menuOpen {

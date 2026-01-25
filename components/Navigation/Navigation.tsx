@@ -6,7 +6,7 @@ import Link from 'next/link';
 import styles from './Navigation.module.css';
 
 export default function Navigation() {
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
