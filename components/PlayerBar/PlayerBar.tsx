@@ -17,6 +17,7 @@ export default function PlayerBar() {
   const dispatch = useAppDispatch();
   const audioRef = useRef<HTMLAudioElement>(null);
   const prevTrackRef = useRef<number | null>(null);
+  const isLoadingRef = useRef<boolean>(false);
   const {
     currentTrack,
     isPlaying,
@@ -27,61 +28,96 @@ export default function PlayerBar() {
     isRepeated,
   } = useAppSelector((state) => state.player);
 
-  // Загрузка нового трека и управление воспроизведением
+  // Загрузка нового трека
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const isNewTrack = prevTrackRef.current !== currentTrack?._id;
     
-    if (currentTrack) {
-      // Если это новый трек, загружаем его
-      if (isNewTrack) {
-        prevTrackRef.current = currentTrack._id;
-        audio.src = currentTrack.track_file;
-        audio.currentTime = 0;
-        dispatch(setCurrentTime(0));
-        
-        // Ждем загрузки перед воспроизведением
-        const handleCanPlay = () => {
-          if (isPlaying) {
-            audio.play().catch((error) => {
-              console.error('Error playing audio:', error);
-              dispatch(togglePlay());
-            });
-          }
-          audio.removeEventListener('canplay', handleCanPlay);
-        };
-        
-        audio.addEventListener('canplay', handleCanPlay);
-        
-        // Если уже загружено, сразу играем
-        if (audio.readyState >= 3) {
-          audio.removeEventListener('canplay', handleCanPlay);
-          if (isPlaying) {
-            audio.play().catch((error) => {
-              console.error('Error playing audio:', error);
-              dispatch(togglePlay());
-            });
-          }
-        }
-      } else {
-        // Если это тот же трек, просто управляем play/pause
+    if (currentTrack && isNewTrack) {
+      isLoadingRef.current = true;
+      prevTrackRef.current = currentTrack._id;
+      
+      // Сначала паузим текущее воспроизведение
+      audio.pause();
+      
+      // Сбрасываем время
+      audio.currentTime = 0;
+      dispatch(setCurrentTime(0));
+      
+      // Загружаем новый трек
+      audio.src = currentTrack.track_file;
+      
+      // Ждем загрузки перед воспроизведением
+      const handleCanPlay = () => {
+        isLoadingRef.current = false;
         if (isPlaying) {
           audio.play().catch((error) => {
-            console.error('Error playing audio:', error);
+            // Игнорируем ошибки AbortError, так как они могут возникать при быстрой смене треков
+            if (error.name !== 'AbortError') {
+              console.error('Error playing audio:', error);
+            }
             dispatch(togglePlay());
           });
-        } else {
-          audio.pause();
+        }
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+      };
+      
+      const handleError = () => {
+        isLoadingRef.current = false;
+        console.error('Error loading audio');
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+      };
+      
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('error', handleError);
+      
+      // Если уже загружено, сразу играем
+      if (audio.readyState >= 3) {
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+        isLoadingRef.current = false;
+        if (isPlaying) {
+          audio.play().catch((error) => {
+            if (error.name !== 'AbortError') {
+              console.error('Error playing audio:', error);
+            }
+            dispatch(togglePlay());
+          });
         }
       }
-    } else {
+    } else if (!currentTrack) {
       // Если трека нет, останавливаем воспроизведение
       audio.pause();
+      audio.src = '';
       prevTrackRef.current = null;
+      isLoadingRef.current = false;
     }
-  }, [currentTrack, isPlaying, dispatch]);
+  }, [currentTrack, dispatch]);
+
+  // Управление play/pause (только для уже загруженного трека)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack || isLoadingRef.current) return;
+
+    // Проверяем, что трек загружен
+    if (audio.readyState < 2) return;
+
+    if (isPlaying) {
+      audio.play().catch((error) => {
+        // Игнорируем AbortError при быстрой смене треков
+        if (error.name !== 'AbortError') {
+          console.error('Error playing audio:', error);
+          dispatch(togglePlay());
+        }
+      });
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, currentTrack, dispatch]);
 
   // Установка громкости
   useEffect(() => {
@@ -97,7 +133,9 @@ export default function PlayerBar() {
     if (!audio) return;
 
     const updateTime = () => {
-      dispatch(setCurrentTime(audio.currentTime));
+      if (!isLoadingRef.current) {
+        dispatch(setCurrentTime(audio.currentTime));
+      }
     };
 
     const updateDuration = () => {
@@ -110,7 +148,9 @@ export default function PlayerBar() {
       if (isRepeated) {
         audio.currentTime = 0;
         audio.play().catch((error) => {
-          console.error('Error replaying audio:', error);
+          if (error.name !== 'AbortError') {
+            console.error('Error replaying audio:', error);
+          }
         });
       } else {
         dispatch(togglePlay());
@@ -140,7 +180,7 @@ export default function PlayerBar() {
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current;
-    if (audio) {
+    if (audio && !isLoadingRef.current) {
       const newTime = Number(e.target.value);
       audio.currentTime = newTime;
       dispatch(setCurrentTime(newTime));
@@ -159,7 +199,7 @@ export default function PlayerBar() {
 
   return (
     <div className={styles.bar}>
-      <audio ref={audioRef} style={{ display: 'none' }} />
+      {currentTrack && <audio ref={audioRef} style={{ display: 'none' }} />}
       <div className={styles.content}>
         <div className={styles.playerProgress}>
           <div
