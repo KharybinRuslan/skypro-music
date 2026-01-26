@@ -16,6 +16,7 @@ import {
 export default function PlayerBar() {
   const dispatch = useAppDispatch();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const prevTrackRef = useRef<number | null>(null);
   const {
     currentTrack,
     isPlaying,
@@ -26,33 +27,63 @@ export default function PlayerBar() {
     isRepeated,
   } = useAppSelector((state) => state.player);
 
+  // Загрузка нового трека и управление воспроизведением
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
+    const isNewTrack = prevTrackRef.current !== currentTrack?._id;
+    
     if (currentTrack) {
-      audio.src = currentTrack.track_file;
-      if (isPlaying) {
-        audio.play().catch((error) => {
-          console.error('Error playing audio:', error);
-        });
+      // Если это новый трек, загружаем его
+      if (isNewTrack) {
+        prevTrackRef.current = currentTrack._id;
+        audio.src = currentTrack.track_file;
+        audio.currentTime = 0;
+        dispatch(setCurrentTime(0));
+        
+        // Ждем загрузки перед воспроизведением
+        const handleCanPlay = () => {
+          if (isPlaying) {
+            audio.play().catch((error) => {
+              console.error('Error playing audio:', error);
+              dispatch(togglePlay());
+            });
+          }
+          audio.removeEventListener('canplay', handleCanPlay);
+        };
+        
+        audio.addEventListener('canplay', handleCanPlay);
+        
+        // Если уже загружено, сразу играем
+        if (audio.readyState >= 3) {
+          audio.removeEventListener('canplay', handleCanPlay);
+          if (isPlaying) {
+            audio.play().catch((error) => {
+              console.error('Error playing audio:', error);
+              dispatch(togglePlay());
+            });
+          }
+        }
+      } else {
+        // Если это тот же трек, просто управляем play/pause
+        if (isPlaying) {
+          audio.play().catch((error) => {
+            console.error('Error playing audio:', error);
+            dispatch(togglePlay());
+          });
+        } else {
+          audio.pause();
+        }
       }
-    }
-  }, [currentTrack, isPlaying]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.play().catch((error) => {
-        console.error('Error playing audio:', error);
-      });
     } else {
+      // Если трека нет, останавливаем воспроизведение
       audio.pause();
+      prevTrackRef.current = null;
     }
-  }, [isPlaying]);
+  }, [currentTrack, isPlaying, dispatch]);
 
+  // Установка громкости
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -60,6 +91,7 @@ export default function PlayerBar() {
     audio.volume = volume / 100;
   }, [volume]);
 
+  // Обработка событий audio элемента
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -69,13 +101,17 @@ export default function PlayerBar() {
     };
 
     const updateDuration = () => {
-      dispatch(setDuration(audio.duration));
+      if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+        dispatch(setDuration(audio.duration));
+      }
     };
 
     const handleEnded = () => {
       if (isRepeated) {
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch((error) => {
+          console.error('Error replaying audio:', error);
+        });
       } else {
         dispatch(togglePlay());
       }
@@ -83,11 +119,13 @@ export default function PlayerBar() {
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('durationchange', updateDuration);
     audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('durationchange', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
   }, [dispatch, isRepeated]);
@@ -103,8 +141,9 @@ export default function PlayerBar() {
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current;
     if (audio) {
-      audio.currentTime = Number(e.target.value);
-      dispatch(setCurrentTime(Number(e.target.value)));
+      const newTime = Number(e.target.value);
+      audio.currentTime = newTime;
+      dispatch(setCurrentTime(newTime));
     }
   };
 
