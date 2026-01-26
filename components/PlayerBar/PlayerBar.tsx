@@ -197,9 +197,14 @@ export default function PlayerBar() {
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  // Не показываем PlayerBar если нет выбранного трека
+  if (!currentTrack) {
+    return null;
+  }
+
   return (
     <div className={styles.bar}>
-      {currentTrack && <audio ref={audioRef} style={{ display: 'none' }} />}
+      <audio ref={audioRef} style={{ display: 'none' }} />
       <div className={styles.content}>
         <div className={styles.playerProgress}>
           <div
