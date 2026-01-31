@@ -4,9 +4,13 @@ import { Track } from '@/types/track';
 
 interface PlaylistProps {
   tracks: Track[];
+  onRemovedFromFavorites?: (trackId: number) => void;
 }
 
-export default function Playlist({ tracks }: PlaylistProps) {
+export default function Playlist({
+  tracks,
+  onRemovedFromFavorites,
+}: PlaylistProps) {
   return (
     <div className={styles.content}>
       <div className={styles.title}>
@@ -21,7 +25,12 @@ export default function Playlist({ tracks }: PlaylistProps) {
       </div>
       <div className={styles.playlist}>
         {tracks.map((track) => (
-          <TrackItem key={track._id} track={track} playlist={tracks} />
+          <TrackItem
+            key={track._id}
+            track={track}
+            playlist={tracks}
+            onRemovedFromFavorites={onRemovedFromFavorites}
+          />
         ))}
       </div>
     </div>

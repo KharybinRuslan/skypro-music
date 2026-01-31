@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
 import styles from './Filter.module.css';
 import { Track } from '@/types/track';
@@ -10,6 +10,8 @@ type FilterType = 'author' | 'year' | 'genre' | null;
 interface FilterProps {
   tracks: Track[];
 }
+
+const yearOptions = ['Сначала новые', 'Сначала старые', 'По умолчанию'];
 
 export default function Filter({ tracks }: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
@@ -21,22 +23,16 @@ export default function Filter({ tracks }: FilterProps) {
     return Array.from(new Set(authors)).sort();
   }, [tracks]);
 
-  const yearOptions = ['Сначала новые', 'Сначала старые', 'По умолчанию'];
-
   const uniqueGenres = useMemo(() => {
     const genres = tracks.flatMap((track) => track.genre);
     return Array.from(new Set(genres)).sort();
   }, [tracks]);
 
-  const handleFilterClick = (filterType: FilterType) => {
-    if (activeFilter === filterType) {
-      setActiveFilter(null);
-    } else {
-      setActiveFilter(filterType);
-    }
-  };
+  const handleFilterClick = useCallback((filterType: FilterType) => {
+    setActiveFilter((prev) => (prev === filterType ? null : filterType));
+  }, []);
 
-  const getFilterList = (): string[] => {
+  const filterList = useMemo(() => {
     switch (activeFilter) {
       case 'author':
         return uniqueAuthors;
@@ -47,9 +43,7 @@ export default function Filter({ tracks }: FilterProps) {
       default:
         return [];
     }
-  };
-
-  const filterList = getFilterList();
+  }, [activeFilter, uniqueAuthors, uniqueGenres]);
 
   return (
     <div className={styles.filter}>

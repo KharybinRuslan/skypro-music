@@ -28,12 +28,14 @@
 
 .timeDisplay {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 4px;
-  padding: 0 31px 0 0;
+  min-width: 72px;
   font-size: 13px;
   line-height: 24px;
   color: #696969;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .timeCurrent {
@@ -268,15 +270,40 @@
   color: #ffffff;
 }
 
-.dislike {
+.likeWrap {
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-left: 30px;
 }
 
-.dislikeBtn {
-  padding: 5px;
-  margin-left: 28.5px;
+.likeBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin-right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.likeBtn:hover {
+  opacity: 0.8;
+}
+
+.likeBtn:active {
+  transform: scale(0.95);
+}
+
+.likeBtn:focus-visible {
+  outline: 1px solid #b672ff;
+  outline-offset: 2px;
+}
+
+.likeBtnActive .likeSvg {
+  fill: #b672ff;
+  stroke: #b672ff;
 }
 
 .likeSvg {
@@ -284,32 +311,39 @@
   height: 12px;
   fill: transparent;
   stroke: #696969;
+  transition: fill 0.2s ease, stroke 0.2s ease;
 }
 
-.dislikeSvg {
-  width: 14.34px;
-  height: 13px;
-  fill: transparent;
-  stroke: #696969;
-}
-
-.dislikeBtn:hover svg,
-.btnShuffle:hover .likeSvg {
+.likeWrap .likeBtn:hover .likeSvg {
   fill: transparent;
   stroke: #acacac;
 }
 
-.dislikeBtn:active svg,
-.btnShuffle:active .likeSvg {
-  fill: #696969;
+.likeWrap .likeBtn:active .likeSvg {
+  fill: transparent;
   stroke: #ffffff;
+}
+
+.likeError {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-left: 8px;
 }
 
 .volumeBlock {
   width: auto;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  gap: 24px;
   padding: 0 92px 0 0;
+}
+
+.volumeBlock .timeDisplay {
+  align-self: flex-start;
+  margin-left: auto;
+  margin-right: 0;
+  flex-shrink: 0;
 }
 
 .volumeContent {

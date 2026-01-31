@@ -6,10 +6,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import styles from './Navigation.module.css';
 import { getAccessToken, clearTokens } from '@/lib/auth/token';
+import { useAppDispatch } from '@/store/hooks';
+import { setFavorites } from '@/store/slices/favoritesSlice';
 
 export default function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -18,9 +21,10 @@ export default function Navigation() {
   }, [pathname]);
 
   const handleLogout = () => {
+    dispatch(setFavorites([]));
     clearTokens();
     setIsLoggedIn(false);
-    router.push('/auth/signin');
+    router.push('/');
   };
 
   const toggleMenu = () => {
@@ -50,11 +54,13 @@ export default function Navigation() {
               Главное
             </Link>
           </li>
-          <li className={styles.menuItem}>
-            <Link href="#" className={styles.menuLink}>
-              Мой плейлист
-            </Link>
-          </li>
+          {isLoggedIn && (
+            <li className={styles.menuItem}>
+              <Link href="/favorites" className={styles.menuLink}>
+                Мой плейлист
+              </Link>
+            </li>
+          )}
           <li className={styles.menuItem}>
             {isLoggedIn ? (
               <button
