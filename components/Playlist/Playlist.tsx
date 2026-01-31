@@ -20,7 +20,7 @@ export default function Playlist() {
       </div>
       <div className={styles.playlist}>
         {tracks.map((track) => (
-          <TrackItem key={track._id} track={track} />
+          <TrackItem key={track._id} track={track} playlist={tracks} />
         ))}
       </div>
     </div>

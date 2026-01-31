@@ -11,12 +11,37 @@
   flex-direction: column;
 }
 
+.playerProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 4px 0;
+}
+
 .playerProgress {
   width: 100%;
   height: 5px;
   background: #2e2e2e;
   position: relative;
   cursor: pointer;
+}
+
+.timeDisplay {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 31px 0 0;
+  font-size: 13px;
+  line-height: 24px;
+  color: #696969;
+}
+
+.timeCurrent {
+  color: #696969;
+}
+
+.timeTotal {
+  color: #696969;
 }
 
 .progressBar {

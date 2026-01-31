@@ -3,6 +3,7 @@ import { Track } from '@/types/track';
 
 interface PlayerState {
   currentTrack: Track | null;
+  playlist: Track[];
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -13,6 +14,7 @@ interface PlayerState {
 
 const initialState: PlayerState = {
   currentTrack: null,
+  playlist: [],
   isPlaying: false,
   currentTime: 0,
   duration: 0,
@@ -25,6 +27,9 @@ const playerSlice = createSlice({
   name: 'player',
   initialState,
   reducers: {
+    setPlaylist: (state, action: PayloadAction<Track[]>) => {
+      state.playlist = action.payload;
+    },
     setCurrentTrack: (state, action: PayloadAction<Track>) => {
       state.currentTrack = action.payload;
       state.isPlaying = true;
@@ -52,6 +57,7 @@ const playerSlice = createSlice({
 });
 
 export const {
+  setPlaylist,
   setCurrentTrack,
   togglePlay,
   setCurrentTime,

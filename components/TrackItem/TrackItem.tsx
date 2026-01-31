@@ -4,10 +4,11 @@ import Link from 'next/link';
 import styles from './TrackItem.module.css';
 import { Track } from '@/types/track';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setCurrentTrack } from '@/store/slices/playerSlice';
+import { setCurrentTrack, setPlaylist } from '@/store/slices/playerSlice';
 
 interface TrackItemProps {
   track: Track;
+  playlist: Track[];
 }
 
 function formatDuration(seconds: number): string {
@@ -16,14 +17,16 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-export default function TrackItem({ track }: TrackItemProps) {
+export default function TrackItem({ track, playlist }: TrackItemProps) {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((state) => state.player.currentTrack);
   const isPlaying = useAppSelector((state) => state.player.isPlaying);
 
   const isActive = currentTrack?._id === track._id;
 
-  const handleTrackClick = () => {
+  const handleTrackClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dispatch(setPlaylist(playlist));
     dispatch(setCurrentTrack(track));
   };
 

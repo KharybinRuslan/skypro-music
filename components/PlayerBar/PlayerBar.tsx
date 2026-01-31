@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from './PlayerBar.module.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
+  setCurrentTrack,
   togglePlay,
   setCurrentTime,
   setDuration,
@@ -12,6 +13,37 @@ import {
   toggleShuffle,
   toggleRepeat,
 } from '@/store/slices/playerSlice';
+import { Track } from '@/types/track';
+
+function formatTime(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function getNextTrack(
+  playlist: Track[],
+  currentTrack: Track,
+  isShuffled: boolean,
+): Track | null {
+  if (playlist.length === 0) return null;
+  if (isShuffled) {
+    if (playlist.length === 1) return currentTrack;
+    const others = playlist.filter((t) => t._id !== currentTrack._id);
+    return others[Math.floor(Math.random() * others.length)] ?? null;
+  }
+  const idx = playlist.findIndex((t) => t._id === currentTrack._id);
+  if (idx < 0 || idx >= playlist.length - 1) return null;
+  return playlist[idx + 1] ?? null;
+}
+
+function getPrevTrack(playlist: Track[], currentTrack: Track): Track | null {
+  if (playlist.length === 0) return null;
+  const idx = playlist.findIndex((t) => t._id === currentTrack._id);
+  if (idx <= 0) return null;
+  return playlist[idx - 1] ?? null;
+}
 
 export default function PlayerBar() {
   const dispatch = useAppDispatch();
@@ -20,6 +52,7 @@ export default function PlayerBar() {
   const isLoadingRef = useRef<boolean>(false);
   const {
     currentTrack,
+    playlist,
     isPlaying,
     currentTime,
     duration,
@@ -34,27 +67,21 @@ export default function PlayerBar() {
     if (!audio) return;
 
     const isNewTrack = prevTrackRef.current !== currentTrack?._id;
-    
+
     if (currentTrack && isNewTrack) {
       isLoadingRef.current = true;
       prevTrackRef.current = currentTrack._id;
-      
-      // Сначала паузим текущее воспроизведение
+
       audio.pause();
-      
-      // Сбрасываем время
       audio.currentTime = 0;
       dispatch(setCurrentTime(0));
-      
-      // Загружаем новый трек
+
       audio.src = currentTrack.track_file;
-      
-      // Ждем загрузки перед воспроизведением
+
       const handleCanPlay = () => {
         isLoadingRef.current = false;
         if (isPlaying) {
           audio.play().catch((error) => {
-            // Игнорируем ошибки AbortError, так как они могут возникать при быстрой смене треков
             if (error.name !== 'AbortError') {
               console.error('Error playing audio:', error);
             }
@@ -64,18 +91,17 @@ export default function PlayerBar() {
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('error', handleError);
       };
-      
+
       const handleError = () => {
         isLoadingRef.current = false;
         console.error('Error loading audio');
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('error', handleError);
       };
-      
+
       audio.addEventListener('canplay', handleCanPlay);
       audio.addEventListener('error', handleError);
-      
-      // Если уже загружено, сразу играем
+
       if (audio.readyState >= 3) {
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('error', handleError);
@@ -90,25 +116,21 @@ export default function PlayerBar() {
         }
       }
     } else if (!currentTrack) {
-      // Если трека нет, останавливаем воспроизведение
       audio.pause();
       audio.src = '';
       prevTrackRef.current = null;
       isLoadingRef.current = false;
     }
-  }, [currentTrack, dispatch]);
+  }, [currentTrack, dispatch, isPlaying]);
 
-  // Управление play/pause (только для уже загруженного трека)
+  // Управление play/pause
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack || isLoadingRef.current) return;
-
-    // Проверяем, что трек загружен
     if (audio.readyState < 2) return;
 
     if (isPlaying) {
       audio.play().catch((error) => {
-        // Игнорируем AbortError при быстрой смене треков
         if (error.name !== 'AbortError') {
           console.error('Error playing audio:', error);
           dispatch(togglePlay());
@@ -119,15 +141,13 @@ export default function PlayerBar() {
     }
   }, [isPlaying, currentTrack, dispatch]);
 
-  // Установка громкости
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
     audio.volume = volume / 100;
   }, [volume]);
 
-  // Обработка событий audio элемента
+  // События audio: timeupdate, duration, ended
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -139,7 +159,11 @@ export default function PlayerBar() {
     };
 
     const updateDuration = () => {
-      if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+      if (
+        audio.duration &&
+        !isNaN(audio.duration) &&
+        isFinite(audio.duration)
+      ) {
         dispatch(setDuration(audio.duration));
       }
     };
@@ -152,6 +176,11 @@ export default function PlayerBar() {
             console.error('Error replaying audio:', error);
           }
         });
+        return;
+      }
+      const next = getNextTrack(playlist, currentTrack!, isShuffled);
+      if (next) {
+        dispatch(setCurrentTrack(next));
       } else {
         dispatch(togglePlay());
       }
@@ -168,10 +197,22 @@ export default function PlayerBar() {
       audio.removeEventListener('durationchange', updateDuration);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [dispatch, isRepeated]);
+  }, [dispatch, isRepeated, isShuffled, playlist, currentTrack]);
 
   const handlePlayPause = () => {
     dispatch(togglePlay());
+  };
+
+  const handleNext = () => {
+    if (!currentTrack || playlist.length === 0) return;
+    const next = getNextTrack(playlist, currentTrack, isShuffled);
+    if (next) dispatch(setCurrentTrack(next));
+  };
+
+  const handlePrev = () => {
+    if (!currentTrack || playlist.length === 0) return;
+    const prev = getPrevTrack(playlist, currentTrack);
+    if (prev) dispatch(setCurrentTrack(prev));
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,7 +238,6 @@ export default function PlayerBar() {
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Не показываем PlayerBar если нет выбранного трека
   if (!currentTrack) {
     return null;
   }
@@ -206,26 +246,34 @@ export default function PlayerBar() {
     <div className={styles.bar}>
       <audio ref={audioRef} style={{ display: 'none' }} />
       <div className={styles.content}>
-        <div className={styles.playerProgress}>
-          <div
-            className={styles.progressBar}
-            style={{ width: `${progressPercent}%` }}
-          ></div>
-          <input
-            type="range"
-            min="0"
-            max={duration || 0}
-            value={currentTime}
-            onChange={handleProgressChange}
-            className={styles.progressLine}
-          />
+        <div className={styles.playerProgressWrap}>
+          <div className={styles.playerProgress}>
+            <div
+              className={styles.progressBar}
+              style={{ width: `${progressPercent}%` }}
+            />
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              value={currentTime}
+              onChange={handleProgressChange}
+              className={styles.progressLine}
+            />
+          </div>
+          <div className={styles.timeDisplay}>
+            <span className={styles.timeCurrent}>
+              {formatTime(currentTime)}
+            </span>
+            <span className={styles.timeTotal}>/ {formatTime(duration)}</span>
+          </div>
         </div>
         <div className={styles.playerBlock}>
           <div className={styles.player}>
             <div className={styles.controls}>
-              <div className={styles.btnPrev}>
+              <div className={styles.btnPrev} onClick={handlePrev}>
                 <svg className={styles.btnPrevSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-prev"></use>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-prev" />
                 </svg>
               </div>
               <div className={styles.btnPlay} onClick={handlePlayPause}>
@@ -236,12 +284,12 @@ export default function PlayerBar() {
                         ? '/img/icon/sprite.svg#icon-pause'
                         : '/img/icon/sprite.svg#icon-play'
                     }
-                  ></use>
+                  />
                 </svg>
               </div>
-              <div className={styles.btnNext}>
+              <div className={styles.btnNext} onClick={handleNext}>
                 <svg className={styles.btnNextSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-next"></use>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-next" />
                 </svg>
               </div>
               <div
@@ -249,7 +297,7 @@ export default function PlayerBar() {
                 onClick={handleRepeat}
               >
                 <svg className={styles.btnRepeatSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-repeat"></use>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-repeat" />
                 </svg>
               </div>
               <div
@@ -257,7 +305,7 @@ export default function PlayerBar() {
                 onClick={handleShuffle}
               >
                 <svg className={styles.btnShuffleSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-shuffle"></use>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-shuffle" />
                 </svg>
               </div>
             </div>
@@ -266,7 +314,7 @@ export default function PlayerBar() {
               <div className={styles.contain}>
                 <div className={styles.image}>
                   <svg className={styles.svg}>
-                    <use xlinkHref="/img/icon/sprite.svg#icon-note"></use>
+                    <use xlinkHref="/img/icon/sprite.svg#icon-note" />
                   </svg>
                 </div>
                 <div className={styles.author}>
@@ -284,12 +332,12 @@ export default function PlayerBar() {
               <div className={styles.dislike}>
                 <div className={styles.btnShuffle}>
                   <svg className={styles.likeSvg}>
-                    <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
+                    <use xlinkHref="/img/icon/sprite.svg#icon-like" />
                   </svg>
                 </div>
                 <div className={styles.dislikeBtn}>
                   <svg className={styles.dislikeSvg}>
-                    <use xlinkHref="/img/icon/sprite.svg#icon-dislike"></use>
+                    <use xlinkHref="/img/icon/sprite.svg#icon-dislike" />
                   </svg>
                 </div>
               </div>
@@ -299,15 +347,15 @@ export default function PlayerBar() {
             <div className={styles.volumeContent}>
               <div className={styles.volumeImage}>
                 <svg className={styles.volumeSvg}>
-                  <use xlinkHref="/img/icon/sprite.svg#icon-volume"></use>
+                  <use xlinkHref="/img/icon/sprite.svg#icon-volume" />
                 </svg>
               </div>
               <div className={styles.volumeProgress}>
                 <input
                   className={styles.volumeProgressLine}
                   type="range"
-                  min="0"
-                  max="100"
+                  min={0}
+                  max={100}
                   value={volume}
                   onChange={handleVolumeChange}
                 />
