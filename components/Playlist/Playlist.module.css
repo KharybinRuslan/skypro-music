@@ -1,6 +1,9 @@
 .content {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .title {
@@ -46,10 +49,34 @@
 .col04 {
   width: 60px;
   text-align: end;
+  padding-right: 20px;
 }
 
 .playlist {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #696969 #2e2e2e;
+  padding-right: 20px;
+}
+
+.playlist::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playlist::-webkit-scrollbar-track {
+  background: #2e2e2e;
+  border-radius: 3px;
+}
+
+.playlist::-webkit-scrollbar-thumb {
+  background: #696969;
+  border-radius: 3px;
+}
+
+.playlist::-webkit-scrollbar-thumb:hover {
+  background: #7e7e7e;
 }
