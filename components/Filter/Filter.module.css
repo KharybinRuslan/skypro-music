@@ -1,0 +1,103 @@
+.filter {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 51px;
+  position: relative;
+}
+
+.filterTitle {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  margin-right: 15px;
+  color: #ffffff;
+}
+
+.filterButtons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  position: relative;
+}
+
+.filterButtonWrapper {
+  position: relative;
+}
+
+.filterButton {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  border: 1px solid #ffffff;
+  border-radius: 60px;
+  padding: 6px 20px;
+  cursor: pointer;
+  color: #ffffff;
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+.filterButton:hover {
+  border-color: #d9b6ff;
+  color: #d9b6ff;
+}
+
+.filterButton.active {
+  border-color: #ad61ff;
+  color: #ad61ff;
+  background-color: rgba(173, 97, 255, 0.1);
+}
+
+.filterList {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background-color: #313131;
+  border-radius: 12px;
+  padding: 34px 34px 34px 34px;
+  z-index: 10;
+  color: white;
+  display: flex;
+  gap: 28px;
+  height: max-content;
+  max-height: 237px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-direction: column;
+  width: max-content;
+  max-width: 248px;
+  box-sizing: border-box;
+}
+
+.filterList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.filterList::-webkit-scrollbar-track {
+  background-color: rgba(75, 73, 73, 1);
+  border-radius: 0 12px 12px 0;
+  margin: 12px 0;
+}
+
+.filterList::-webkit-scrollbar-thumb {
+  background-color: white;
+  border-radius: 2px;
+}
+
+.filterListItem {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 24px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.filterListItem:hover {
+  color: #b672ff;
+  text-decoration: underline;
+}
