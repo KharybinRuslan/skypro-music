@@ -3,14 +3,16 @@
 import { useState, useMemo } from 'react';
 import classNames from 'classnames';
 import styles from './Filter.module.css';
-import { data } from '@/data';
 import { Track } from '@/types/track';
 
 type FilterType = 'author' | 'year' | 'genre' | null;
 
-export default function Filter() {
+interface FilterProps {
+  tracks: Track[];
+}
+
+export default function Filter({ tracks }: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
-  const tracks: Track[] = data;
 
   const uniqueAuthors = useMemo(() => {
     const authors = tracks

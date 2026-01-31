@@ -1,11 +1,12 @@
 import styles from './Playlist.module.css';
 import TrackItem from '../TrackItem/TrackItem';
-import { data } from '@/data';
 import { Track } from '@/types/track';
 
-export default function Playlist() {
-  const tracks: Track[] = data;
+interface PlaylistProps {
+  tracks: Track[];
+}
 
+export default function Playlist({ tracks }: PlaylistProps) {
   return (
     <div className={styles.content}>
       <div className={styles.title}>

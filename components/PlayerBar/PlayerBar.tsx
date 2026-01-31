@@ -61,7 +61,6 @@ export default function PlayerBar() {
     isRepeated,
   } = useAppSelector((state) => state.player);
 
-  // Загрузка нового трека
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -123,7 +122,6 @@ export default function PlayerBar() {
     }
   }, [currentTrack, dispatch, isPlaying]);
 
-  // Управление play/pause
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack || isLoadingRef.current) return;
@@ -147,7 +145,6 @@ export default function PlayerBar() {
     audio.volume = volume / 100;
   }, [volume]);
 
-  // События audio: timeupdate, duration, ended
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
