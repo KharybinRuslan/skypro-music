@@ -33,6 +33,14 @@ export interface TokenResponse {
   refresh: string;
 }
 
+export interface RefreshTokenRequest {
+  refresh: string;
+}
+
+export interface RefreshTokenResponse {
+  access: string;
+}
+
 export interface ApiErrorResponse {
   message?: string;
   detail?: string;

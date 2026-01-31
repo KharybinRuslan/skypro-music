@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import Link from 'next/link';
 import Image from 'next/image';
 import { login as apiLogin, getToken } from '@/lib/api/client';
-import { setTokens } from '@/lib/auth/token';
+import { setTokens, setUserId, setUsername } from '@/lib/auth/token';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -21,9 +21,11 @@ export default function SignInPage() {
     setError(null);
     setLoading(true);
     try {
-      await apiLogin({ email, password });
+      const user = await apiLogin({ email, password });
       const { access, refresh } = await getToken({ email, password });
       setTokens(access, refresh);
+      setUserId(String(user._id));
+      setUsername(user.username ?? '');
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');

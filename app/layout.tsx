@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { Providers } from './providers';
+import FavoritesSync from '@/components/FavoritesSync/FavoritesSync';
 
 const montserrat = Montserrat({
   subsets: ["latin", "cyrillic"],
@@ -22,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={montserrat.variable}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <FavoritesSync />
+          {children}
+        </Providers>
       </body>
     </html>
   );
