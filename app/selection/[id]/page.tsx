@@ -1,7 +1,5 @@
 import MainLayout from '@/components/MainLayout/MainLayout';
-import Search from '@/components/Search/Search';
-import Filter from '@/components/Filter/Filter';
-import Playlist from '@/components/Playlist/Playlist';
+import TracksSection from '@/components/TracksSection/TracksSection';
 import { fetchSelectionTracks } from '@/lib/api/client';
 import { Track } from '@/types/track';
 
@@ -25,15 +23,10 @@ export default async function SelectionPage({ params }: PageProps) {
 
   return (
     <MainLayout>
-      <Search />
-      <h2 className="centerblock__h2">{title}</h2>
       {error ? (
         <p style={{ color: '#ff6b6b', marginTop: 16 }}>{error}</p>
       ) : (
-        <>
-          <Filter tracks={tracks} />
-          <Playlist tracks={tracks} />
-        </>
+        <TracksSection tracks={tracks} title={title} />
       )}
     </MainLayout>
   );
