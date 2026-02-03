@@ -3,9 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout/MainLayout';
-import Search from '@/components/Search/Search';
-import Filter from '@/components/Filter/Filter';
-import Playlist from '@/components/Playlist/Playlist';
+import TracksSection from '@/components/TracksSection/TracksSection';
 import { fetchFavoriteTracks } from '@/lib/api/client';
 import { getAccessToken } from '@/lib/auth/token';
 import { Track } from '@/types/track';
@@ -44,8 +42,6 @@ export default function FavoritesPage() {
 
   return (
     <MainLayout>
-      <Search />
-      <h2 className="centerblock__h2">Мой плейлист</h2>
       {loading ? (
         <p className="centerblock__content" style={{ color: '#696969' }}>
           Загрузка...
@@ -53,17 +49,18 @@ export default function FavoritesPage() {
       ) : error ? (
         <p style={{ color: '#ff6b6b', marginTop: 16 }}>{error}</p>
       ) : tracks.length === 0 ? (
-        <p className="centerblock__content" style={{ color: '#696969' }}>
-          В избранном пока нет треков
-        </p>
-      ) : (
         <>
-          <Filter tracks={tracks} />
-          <Playlist
-            tracks={tracks}
-            onRemovedFromFavorites={handleRemovedFromFavorites}
-          />
+          <h2 className="centerblock__h2">Мой плейлист</h2>
+          <p className="centerblock__content" style={{ color: '#696969' }}>
+            В избранном пока нет треков
+          </p>
         </>
+      ) : (
+        <TracksSection
+          tracks={tracks}
+          title="Мой плейлист"
+          onRemovedFromFavorites={handleRemovedFromFavorites}
+        />
       )}
     </MainLayout>
   );

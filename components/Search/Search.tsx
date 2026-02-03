@@ -1,6 +1,13 @@
+'use client';
+
 import styles from './Search.module.css';
 
-export default function Search() {
+interface SearchProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export default function Search({ value, onChange }: SearchProps) {
   return (
     <div className={styles.search}>
       <svg className={styles.searchSvg}>
@@ -11,6 +18,9 @@ export default function Search() {
         type="search"
         placeholder="Поиск"
         name="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Поиск по названию трека"
       />
     </div>
   );
