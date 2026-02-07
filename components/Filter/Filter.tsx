@@ -1,55 +1,81 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
 import styles from './Filter.module.css';
 import { Track } from '@/types/track';
+import { getUniqueAuthors, getUniqueGenres } from '@/lib/tracks/filters';
+import type { SortOrder } from '@/lib/tracks/filters';
 
 type FilterType = 'author' | 'year' | 'genre' | null;
 
 interface FilterProps {
   tracks: Track[];
+  selectedAuthor: string | null;
+  selectedGenre: string | null;
+  sortOrder: SortOrder;
+  onAuthorSelect: (author: string | null) => void;
+  onGenreSelect: (genre: string | null) => void;
+  onSortOrderSelect: (order: SortOrder) => void;
 }
 
-export default function Filter({ tracks }: FilterProps) {
+const SORT_OPTIONS: { label: string; value: SortOrder }[] = [
+  { label: 'Сначала новые', value: 'newest' },
+  { label: 'Сначала старые', value: 'oldest' },
+  { label: 'По умолчанию', value: 'default' },
+];
+
+export default function Filter({
+  tracks,
+  selectedAuthor,
+  selectedGenre,
+  sortOrder,
+  onAuthorSelect,
+  onGenreSelect,
+  onSortOrderSelect,
+}: FilterProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
 
-  const uniqueAuthors = useMemo(() => {
-    const authors = tracks
-      .map((track) => track.author)
-      .filter((author) => author && author !== '-');
-    return Array.from(new Set(authors)).sort();
-  }, [tracks]);
+  const uniqueAuthors = useMemo(() => getUniqueAuthors(tracks), [tracks]);
+  const uniqueGenres = useMemo(() => getUniqueGenres(tracks), [tracks]);
 
-  const yearOptions = ['Сначала новые', 'Сначала старые', 'По умолчанию'];
+  const handleFilterClick = useCallback((filterType: FilterType) => {
+    setActiveFilter((prev) => (prev === filterType ? null : filterType));
+  }, []);
 
-  const uniqueGenres = useMemo(() => {
-    const genres = tracks.flatMap((track) => track.genre);
-    return Array.from(new Set(genres)).sort();
-  }, [tracks]);
+  const handleAuthorClick = useCallback(
+    (author: string) => {
+      onAuthorSelect(selectedAuthor === author ? null : author);
+    },
+    [selectedAuthor, onAuthorSelect],
+  );
 
-  const handleFilterClick = (filterType: FilterType) => {
-    if (activeFilter === filterType) {
-      setActiveFilter(null);
-    } else {
-      setActiveFilter(filterType);
-    }
-  };
+  const handleGenreClick = useCallback(
+    (genre: string) => {
+      onGenreSelect(selectedGenre === genre ? null : genre);
+    },
+    [selectedGenre, onGenreSelect],
+  );
 
-  const getFilterList = (): string[] => {
+  const handleSortClick = useCallback(
+    (order: SortOrder) => {
+      onSortOrderSelect(order);
+    },
+    [onSortOrderSelect],
+  );
+
+  const filterList = useMemo(() => {
     switch (activeFilter) {
       case 'author':
         return uniqueAuthors;
       case 'year':
-        return yearOptions;
+        return SORT_OPTIONS;
       case 'genre':
         return uniqueGenres;
       default:
         return [];
     }
-  };
-
-  const filterList = getFilterList();
+  }, [activeFilter, uniqueAuthors, uniqueGenres]);
 
   return (
     <div className={styles.filter}>
@@ -66,10 +92,15 @@ export default function Filter({ tracks }: FilterProps) {
           </button>
           {activeFilter === 'author' && filterList.length > 0 && (
             <div className={styles.filterList}>
-              {filterList.map((item, index) => (
-                <div key={index} className={styles.filterListItem}>
+              {(filterList as string[]).map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  className={styles.filterListItem}
+                  onClick={() => handleAuthorClick(item)}
+                >
                   {item}
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -85,10 +116,15 @@ export default function Filter({ tracks }: FilterProps) {
           </button>
           {activeFilter === 'year' && filterList.length > 0 && (
             <div className={styles.filterList}>
-              {filterList.map((item, index) => (
-                <div key={index} className={styles.filterListItem}>
-                  {item}
-                </div>
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  type="button"
+                  key={opt.value}
+                  className={styles.filterListItem}
+                  onClick={() => handleSortClick(opt.value)}
+                >
+                  {opt.label}
+                </button>
               ))}
             </div>
           )}
@@ -104,10 +140,15 @@ export default function Filter({ tracks }: FilterProps) {
           </button>
           {activeFilter === 'genre' && filterList.length > 0 && (
             <div className={styles.filterList}>
-              {filterList.map((item, index) => (
-                <div key={index} className={styles.filterListItem}>
+              {(filterList as string[]).map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  className={styles.filterListItem}
+                  onClick={() => handleGenreClick(item)}
+                >
                   {item}
-                </div>
+                </button>
               ))}
             </div>
           )}
