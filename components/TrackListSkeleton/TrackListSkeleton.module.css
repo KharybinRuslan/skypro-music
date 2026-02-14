@@ -1,0 +1,101 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+}
+
+.col01 {
+  width: 447px;
+  min-width: 447px;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: 2px;
+  color: #696969;
+  text-transform: uppercase;
+}
+
+.col02 {
+  width: 321px;
+  min-width: 321px;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: 2px;
+  color: #696969;
+  text-transform: uppercase;
+}
+
+.col03 {
+  width: 245px;
+  min-width: 245px;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: 2px;
+  color: #696969;
+  text-transform: uppercase;
+}
+
+.col04 {
+  width: 60px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.playlist {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.cellIcon {
+  width: 51px;
+  height: 51px;
+  margin-right: 17px;
+  flex-shrink: 0;
+}
+
+.cellTitle {
+  width: 380px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.cellAuthor {
+  width: 301px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.cellAlbum {
+  width: 225px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.cellTime {
+  width: 60px;
+  flex-shrink: 0;
+}

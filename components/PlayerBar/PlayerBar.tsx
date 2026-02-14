@@ -17,14 +17,9 @@ import {
 import { addFavorite, removeFavorite } from '@/store/slices/favoritesSlice';
 import { addToFavorites, removeFromFavorites } from '@/lib/api/client';
 import { getAccessToken, getUserId } from '@/lib/auth/token';
+import { formatTime } from '@/lib/utils/format';
+import { toast } from 'react-toastify';
 import { Track } from '@/types/track';
-
-function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
 
 function getNextTrack(
   playlist: Track[],
@@ -68,7 +63,6 @@ export default function PlayerBar() {
     (state) => state.favorites.favoriteTrackIds,
   );
   const [mounted, setMounted] = useState(false);
-  const [likeError, setLikeError] = useState<string | null>(null);
   const likePendingRef = useRef(false);
 
   useEffect(() => {
@@ -265,7 +259,6 @@ export default function PlayerBar() {
     if (!token || !uid) return;
     if (likePendingRef.current) return;
     likePendingRef.current = true;
-    setLikeError(null);
     const wasLiked =
       favoriteTrackIds.includes(currentTrack._id);
     try {
@@ -291,8 +284,7 @@ export default function PlayerBar() {
         );
       }
     } catch (err) {
-      setLikeError(err instanceof Error ? err.message : 'Ошибка');
-      setTimeout(() => setLikeError(null), 3000);
+      toast.error(err instanceof Error ? err.message : 'Ошибка');
     } finally {
       likePendingRef.current = false;
     }
@@ -408,11 +400,6 @@ export default function PlayerBar() {
                     <use xlinkHref="/img/icon/sprite.svg#icon-like" />
                   </svg>
                 </button>
-                {likeError && (
-                  <span className={styles.likeError} role="alert">
-                    {likeError}
-                  </span>
-                )}
               </div>
             </div>
           </div>

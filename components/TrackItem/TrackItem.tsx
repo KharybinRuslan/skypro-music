@@ -13,17 +13,13 @@ import {
 import { addFavorite, removeFavorite } from '@/store/slices/favoritesSlice';
 import { addToFavorites, removeFromFavorites } from '@/lib/api/client';
 import { getAccessToken, getUserId } from '@/lib/auth/token';
+import { formatDuration } from '@/lib/utils/format';
+import { toast } from 'react-toastify';
 
 interface TrackItemProps {
   track: Track;
   playlist: Track[];
   onRemovedFromFavorites?: (trackId: number) => void;
-}
-
-function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
 export default function TrackItem({
@@ -37,7 +33,6 @@ export default function TrackItem({
   const favoriteTrackIds = useAppSelector(
     (state) => state.favorites.favoriteTrackIds,
   );
-  const [likeError, setLikeError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -63,7 +58,6 @@ export default function TrackItem({
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setLikeError(null);
       if (!isLoggedIn) return;
       if (!userId) return;
       try {
@@ -80,8 +74,7 @@ export default function TrackItem({
           dispatch(updateTrackLike({ trackId: track._id, userId, liked: true }));
         }
       } catch (err) {
-        setLikeError(err instanceof Error ? err.message : 'Ошибка');
-        setTimeout(() => setLikeError(null), 3000);
+        toast.error(err instanceof Error ? err.message : 'Ошибка');
       }
     },
     [isLoggedIn, userId, isLiked, track._id, dispatch, onRemovedFromFavorites],
@@ -127,15 +120,10 @@ export default function TrackItem({
             <svg className={styles.timeSvg} viewBox="0 0 16 14">
               <use xlinkHref="/img/icon/sprite.svg#icon-like"></use>
             </svg>
-            {likeCount > 0 && (
-              <span className={styles.likeCount}>{likeCount}</span>
-            )}
-          </button>
-          {likeError && (
-            <span className={styles.likeError} role="alert">
-              {likeError}
-            </span>
+          {likeCount > 0 && (
+            <span className={styles.likeCount}>{likeCount}</span>
           )}
+          </button>
           <span className={styles.timeText}>
             {formatDuration(track.duration_in_seconds)}
           </span>

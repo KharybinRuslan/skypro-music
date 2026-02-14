@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import styles from './signin.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -13,12 +14,10 @@ export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
     try {
       const user = await apiLogin({ email, password });
@@ -28,7 +27,7 @@ export default function SignInPage() {
       setUsername(user.username ?? '');
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка входа');
+      toast.error(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
       setLoading(false);
     }
@@ -67,9 +66,6 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className={styles.errorContainer}>
-              {error && <span>{error}</span>}
-            </div>
             <button
               type="submit"
               className={styles.modal__btnEnter}

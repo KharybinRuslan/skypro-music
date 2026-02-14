@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import MainLayout from '@/components/MainLayout/MainLayout';
+import Search from '@/components/Search/Search';
 import TracksSection from '@/components/TracksSection/TracksSection';
+import TrackListSkeleton from '@/components/TrackListSkeleton/TrackListSkeleton';
 import { fetchFavoriteTracks } from '@/lib/api/client';
 import { getAccessToken } from '@/lib/auth/token';
 import { Track } from '@/types/track';
@@ -27,9 +30,10 @@ export default function FavoritesPage() {
         setTracks(data);
       })
       .catch((err) => {
-        setError(
-          err instanceof Error ? err.message : 'Ошибка загрузки избранного',
-        );
+        const message =
+          err instanceof Error ? err.message : 'Ошибка загрузки избранного';
+        setError(message);
+        toast.error(message);
       })
       .finally(() => {
         setLoading(false);
@@ -43,9 +47,11 @@ export default function FavoritesPage() {
   return (
     <MainLayout>
       {loading ? (
-        <p className="centerblock__content" style={{ color: '#696969' }}>
-          Загрузка...
-        </p>
+        <>
+          <Search />
+          <h2 className="centerblock__h2">Мой плейлист</h2>
+          <TrackListSkeleton />
+        </>
       ) : error ? (
         <p style={{ color: '#ff6b6b', marginTop: 16 }}>{error}</p>
       ) : tracks.length === 0 ? (
