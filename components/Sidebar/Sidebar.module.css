@@ -26,6 +26,18 @@
   background-color: #313131;
   border-radius: 50%;
   cursor: pointer;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconSvg {
+  width: 43px;
+  height: 43px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .block {

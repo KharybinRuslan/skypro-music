@@ -8,7 +8,7 @@
 .track {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -17,6 +17,8 @@
   flex-direction: row;
   align-items: center;
   width: 447px;
+  min-width: 447px;
+  flex-shrink: 0;
 }
 
 .titleImage {
@@ -79,6 +81,8 @@
 
 .author {
   width: 321px;
+  min-width: 321px;
+  flex-shrink: 0;
   display: flex;
   justify-content: flex-start;
 }
@@ -94,6 +98,8 @@
 
 .album {
   width: 245px;
+  min-width: 245px;
+  flex-shrink: 0;
 }
 
 .albumLink {
@@ -107,14 +113,76 @@
 .time {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 60px;
+  min-width: 60px;
+  flex-shrink: 0;
+  line-height: 24px;
+}
+
+.likeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  min-width: 22px;
+  min-height: 24px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.likeBtn:hover {
+  opacity: 0.8;
+}
+
+.likeBtn:active {
+  transform: scale(0.95);
+}
+
+.likeBtnActive .timeSvg {
+  fill: #b672ff;
+  stroke: #b672ff;
+}
+
+.likeBtn:focus-visible {
+  outline: 1px solid #b672ff;
+  outline-offset: 2px;
+}
+
+.likeCount {
+  font-size: 12px;
+  line-height: 24px;
+  color: #696969;
+}
+
+.likeBtnActive .likeCount {
+  color: #b672ff;
+}
+
+.likeError {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-right: 8px;
 }
 
 .timeSvg {
-  width: 14px;
-  height: 12px;
-  margin-right: 17px;
+  width: 16px;
+  height: 14px;
+  min-width: 16px;
+  min-height: 14px;
   fill: transparent;
   stroke: #696969;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .timeText {
@@ -124,4 +192,10 @@
   line-height: 24px;
   text-align: right;
   color: #696969;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.likeError {
+  flex-shrink: 0;
 }

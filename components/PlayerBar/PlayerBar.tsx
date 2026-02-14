@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import styles from './PlayerBar.module.css';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -12,15 +12,14 @@ import {
   setVolume,
   toggleShuffle,
   toggleRepeat,
+  updateTrackLike,
 } from '@/store/slices/playerSlice';
+import { addFavorite, removeFavorite } from '@/store/slices/favoritesSlice';
+import { addToFavorites, removeFromFavorites } from '@/lib/api/client';
+import { getAccessToken, getUserId } from '@/lib/auth/token';
+import { formatTime } from '@/lib/utils/format';
+import { toast } from 'react-toastify';
 import { Track } from '@/types/track';
-
-function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
 
 function getNextTrack(
   playlist: Track[],
@@ -60,6 +59,20 @@ export default function PlayerBar() {
     isShuffled,
     isRepeated,
   } = useAppSelector((state) => state.player);
+  const favoriteTrackIds = useAppSelector(
+    (state) => state.favorites.favoriteTrackIds,
+  );
+  const [mounted, setMounted] = useState(false);
+  const likePendingRef = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isLoggedIn = mounted ? !!getAccessToken() : false;
+  const userId = mounted ? getUserId() : null;
+  const isLiked =
+    currentTrack != null && favoriteTrackIds.includes(currentTrack._id);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -196,44 +209,91 @@ export default function PlayerBar() {
     };
   }, [dispatch, isRepeated, isShuffled, playlist, currentTrack]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     dispatch(togglePlay());
-  };
+  }, [dispatch]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (!currentTrack || playlist.length === 0) return;
     const next = getNextTrack(playlist, currentTrack, isShuffled);
     if (next) dispatch(setCurrentTrack(next));
-  };
+  }, [currentTrack, playlist, isShuffled, dispatch]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (!currentTrack || playlist.length === 0) return;
     const prev = getPrevTrack(playlist, currentTrack);
     if (prev) dispatch(setCurrentTrack(prev));
-  };
+  }, [currentTrack, playlist, dispatch]);
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setVolume(Number(e.target.value)));
-  };
+  const handleVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch(setVolume(Number(e.target.value)));
+    },
+    [dispatch],
+  );
 
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const audio = audioRef.current;
-    if (audio && !isLoadingRef.current) {
-      const newTime = Number(e.target.value);
-      audio.currentTime = newTime;
-      dispatch(setCurrentTime(newTime));
-    }
-  };
+  const handleProgressChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const audio = audioRef.current;
+      if (audio && !isLoadingRef.current) {
+        const newTime = Number(e.target.value);
+        audio.currentTime = newTime;
+        dispatch(setCurrentTime(newTime));
+      }
+    },
+    [dispatch],
+  );
 
-  const handleShuffle = () => {
+  const handleShuffle = useCallback(() => {
     dispatch(toggleShuffle());
-  };
+  }, [dispatch]);
 
-  const handleRepeat = () => {
+  const handleRepeat = useCallback(() => {
     dispatch(toggleRepeat());
-  };
+  }, [dispatch]);
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const handleLikeClick = useCallback(async () => {
+    if (!currentTrack) return;
+    const token = getAccessToken();
+    const uid = getUserId();
+    if (!token || !uid) return;
+    if (likePendingRef.current) return;
+    likePendingRef.current = true;
+    const wasLiked =
+      favoriteTrackIds.includes(currentTrack._id);
+    try {
+      if (wasLiked) {
+        await removeFromFavorites(currentTrack._id);
+        dispatch(removeFavorite(currentTrack._id));
+        dispatch(
+          updateTrackLike({
+            trackId: currentTrack._id,
+            userId: uid,
+            liked: false,
+          }),
+        );
+      } else {
+        await addToFavorites(currentTrack._id);
+        dispatch(addFavorite(currentTrack._id));
+        dispatch(
+          updateTrackLike({
+            trackId: currentTrack._id,
+            userId: uid,
+            liked: true,
+          }),
+        );
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка');
+    } finally {
+      likePendingRef.current = false;
+    }
+  }, [currentTrack, favoriteTrackIds, dispatch]);
+
+  const progressPercent = useMemo(
+    () => (duration > 0 ? (currentTime / duration) * 100 : 0),
+    [currentTime, duration],
+  );
 
   if (!currentTrack) {
     return null;
@@ -257,12 +317,6 @@ export default function PlayerBar() {
               onChange={handleProgressChange}
               className={styles.progressLine}
             />
-          </div>
-          <div className={styles.timeDisplay}>
-            <span className={styles.timeCurrent}>
-              {formatTime(currentTime)}
-            </span>
-            <span className={styles.timeTotal}>/ {formatTime(duration)}</span>
           </div>
         </div>
         <div className={styles.playerBlock}>
@@ -326,17 +380,26 @@ export default function PlayerBar() {
                 </div>
               </div>
 
-              <div className={styles.dislike}>
-                <div className={styles.btnShuffle}>
+              <div className={styles.likeWrap}>
+                <button
+                  type="button"
+                  className={`${styles.likeBtn} ${isLiked ? styles.likeBtnActive : ''}`}
+                  onClick={handleLikeClick}
+                  title={
+                    isLoggedIn
+                      ? isLiked
+                        ? 'Убрать из избранного'
+                        : 'Добавить в избранное'
+                      : 'Войдите, чтобы ставить лайки'
+                  }
+                  aria-label={
+                    isLiked ? 'Убрать из избранного' : 'Добавить в избранное'
+                  }
+                >
                   <svg className={styles.likeSvg}>
                     <use xlinkHref="/img/icon/sprite.svg#icon-like" />
                   </svg>
-                </div>
-                <div className={styles.dislikeBtn}>
-                  <svg className={styles.dislikeSvg}>
-                    <use xlinkHref="/img/icon/sprite.svg#icon-dislike" />
-                  </svg>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -357,6 +420,14 @@ export default function PlayerBar() {
                   onChange={handleVolumeChange}
                 />
               </div>
+            </div>
+            <div className={styles.timeDisplay}>
+              <span className={styles.timeCurrent}>
+                {formatTime(currentTime)}
+              </span>
+              <span className={styles.timeTotal}>
+                / {formatTime(duration)}
+              </span>
             </div>
           </div>
         </div>

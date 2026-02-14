@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from './Sidebar.module.css';
 import { fetchSelections } from '@/lib/api/client';
 import type { Selection } from '@/lib/api/types';
+import { getAccessToken, getUsername, clearTokens } from '@/lib/auth/token';
+import { useAppDispatch } from '@/store/hooks';
+import { setFavorites } from '@/store/slices/favoritesSlice';
 
 const PLAYLIST_IMAGES = [
   '/img/playlist01.png',
@@ -14,13 +18,31 @@ const PLAYLIST_IMAGES = [
 ] as const;
 
 export default function Sidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const dispatch = useAppDispatch();
   const [selections, setSelections] = useState<Selection[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsernameState] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsLoggedIn(!!getAccessToken());
+    setUsernameState(getUsername());
+  }, [pathname]);
 
   useEffect(() => {
     fetchSelections()
       .then(setSelections)
       .catch(() => setSelections([]));
   }, []);
+
+  const handleLogout = () => {
+    dispatch(setFavorites([]));
+    clearTokens();
+    setIsLoggedIn(false);
+    setUsernameState(null);
+    router.push('/');
+  };
 
   const items: { _id: number; name?: string }[] =
     selections.length > 0
@@ -42,12 +64,28 @@ export default function Sidebar() {
   return (
     <div className={styles.sidebar}>
       <div className={styles.personal}>
-        <p className={styles.personalName}>Sergey.Ivanov</p>
-        <Link href="/auth/signin" className={styles.icon}>
-          <svg>
-            <use xlinkHref="/img/icon/sprite.svg#logout"></use>
-          </svg>
-        </Link>
+        <p className={styles.personalName}>
+          {isLoggedIn ? (username ?? 'Пользователь') : ''}
+        </p>
+        {isLoggedIn ? (
+          <button
+            type="button"
+            className={styles.icon}
+            onClick={handleLogout}
+            title="Выйти"
+            aria-label="Выйти"
+          >
+            <svg className={styles.iconSvg} viewBox="0 0 40 40">
+              <use xlinkHref="/img/icon/sprite.svg#logout"></use>
+            </svg>
+          </button>
+        ) : (
+          <Link href="/auth/signin" className={styles.icon} title="Войти">
+            <svg className={styles.iconSvg} viewBox="0 0 40 40">
+              <use xlinkHref="/img/icon/sprite.svg#logout"></use>
+            </svg>
+          </Link>
+        )}
       </div>
       <div className={styles.block}>
         <div className={styles.list}>

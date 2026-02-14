@@ -6,6 +6,7 @@ import {
   type LoginRequest,
   type LoginUserResponse,
   type TokenResponse,
+  type RefreshTokenResponse,
   type ApiErrorResponse,
   type TracksResponse,
   type TracksResponseWrapped,
@@ -13,8 +14,52 @@ import {
   type SelectionsResponse,
   type SelectionResponse,
 } from './types';
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+} from '@/lib/auth/token';
 
 const BASE = getApiBase();
+
+export function getAuthHeaders(): HeadersInit {
+  const access = getAccessToken();
+  if (!access) return {};
+  return { Authorization: `Bearer ${access}` };
+}
+
+export async function refreshToken(): Promise<string> {
+  const refresh = getRefreshToken();
+  if (!refresh) throw new Error('Нет refresh токена');
+  const res = await fetch(`${BASE}/user/token/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = data as ApiErrorResponse;
+    throw new Error(err.detail ?? err.message ?? 'Ошибка обновления токена');
+  }
+  const { access } = data as RefreshTokenResponse;
+  if (access) setTokens(access, refresh);
+  return access;
+}
+
+export async function withReAuth<T>(
+  fn: (headers: HeadersInit) => Promise<T>,
+): Promise<T> {
+  try {
+    return await fn(getAuthHeaders());
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('401') || message.includes('Токен') || message.includes('токен')) {
+      await refreshToken();
+      return fn(getAuthHeaders());
+    }
+    throw err;
+  }
+}
 
 function normalizeTrackFile(track: Track): Track {
   if (track.track_file && !track.track_file.startsWith('http')) {
@@ -96,4 +141,43 @@ export async function fetchSelectionTracks(
     .filter((t): t is Track => t != null)
     .map(normalizeTrackFile);
   return { name, tracks };
+}
+
+export async function fetchFavoriteTracks(): Promise<Track[]> {
+  return withReAuth(async (headers) => {
+    const res = await fetch(`${BASE}/catalog/track/favorite/all/`, {
+      headers: { ...headers },
+    });
+    const raw = await handleResponse<TracksResponse | TracksResponseWrapped>(res);
+    const data = Array.isArray(raw) ? raw : (raw as TracksResponseWrapped).data;
+    return Array.isArray(data) ? data.map(normalizeTrackFile) : [];
+  });
+}
+
+export async function addToFavorites(trackId: number): Promise<void> {
+  return withReAuth(async (headers) => {
+    const res = await fetch(`${BASE}/catalog/track/${trackId}/favorite/`, {
+      method: 'POST',
+      headers: { ...headers },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const err = data as ApiErrorResponse;
+      throw new Error(err.message ?? err.detail ?? `Ошибка ${res.status}`);
+    }
+  });
+}
+
+export async function removeFromFavorites(trackId: number): Promise<void> {
+  return withReAuth(async (headers) => {
+    const res = await fetch(`${BASE}/catalog/track/${trackId}/favorite/`, {
+      method: 'DELETE',
+      headers: { ...headers },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const err = data as ApiErrorResponse;
+      throw new Error(err.message ?? err.detail ?? `Ошибка ${res.status}`);
+    }
+  });
 }

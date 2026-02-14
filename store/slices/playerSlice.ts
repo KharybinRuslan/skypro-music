@@ -53,6 +53,28 @@ const playerSlice = createSlice({
     toggleRepeat: (state) => {
       state.isRepeated = !state.isRepeated;
     },
+    updateTrackLike: (
+      state,
+      action: PayloadAction<{ trackId: number; userId: string; liked: boolean }>,
+    ) => {
+      const { trackId, userId, liked } = action.payload;
+      const updateStared = (track: Track) => {
+        if (track._id !== trackId) return track;
+        const stared = track.stared_user ?? [];
+        const hasUser = stared.includes(userId);
+        if (liked && !hasUser) {
+          return { ...track, stared_user: [...stared, userId] };
+        }
+        if (!liked && hasUser) {
+          return { ...track, stared_user: stared.filter((id) => id !== userId) };
+        }
+        return track;
+      };
+      if (state.currentTrack) {
+        state.currentTrack = updateStared(state.currentTrack) as Track;
+      }
+      state.playlist = state.playlist.map((t) => updateStared(t) as Track);
+    },
   },
 });
 
@@ -65,6 +87,7 @@ export const {
   setVolume,
   toggleShuffle,
   toggleRepeat,
+  updateTrackLike,
 } = playerSlice.actions;
 
 export default playerSlice.reducer;

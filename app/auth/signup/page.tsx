@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import styles from './signup.module.css';
 import classNames from 'classnames';
 import Link from 'next/link';
@@ -13,14 +14,12 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (password !== repeatPassword) {
-      setError('Пароли не совпадают');
+      toast.error('Пароли не совпадают');
       return;
     }
     const username = email.split('@')[0] || email;
@@ -29,7 +28,7 @@ export default function SignUpPage() {
       await apiSignup({ email, password, username });
       router.push('/auth/signin');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка регистрации');
+      toast.error(err instanceof Error ? err.message : 'Ошибка регистрации');
     } finally {
       setLoading(false);
     }
@@ -77,9 +76,6 @@ export default function SignUpPage() {
               onChange={(e) => setRepeatPassword(e.target.value)}
               required
             />
-            <div className={styles.errorContainer}>
-              {error && <span>{error}</span>}
-            </div>
             <button
               type="submit"
               className={styles.modal__btnSignupEnt}
